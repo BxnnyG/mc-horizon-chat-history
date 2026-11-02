@@ -1,0 +1,47 @@
+[mod]
+id = "chathistory"
+version = "1.0.0"
+priority = 100
+
+# Changes two limits inside the chat (game internals): pinned to the commit
+# it was built against.
+[compatibility]
+horizon_revision = "d91cab68ded29bd2b004f7050c468fb98c41a00b"
+
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+# The chat keeps this many messages (vanilla 100): the function as the game
+# has it, with the larger limit.
+[[injection]]
+id = "messages"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client_render::chat::Chat::push_message"
+helper = "push.rs"
+bindings = [
+  { name = "chat", ty = "&mut Chat", value = "&mut *self" },
+  { name = "font", ty = "&crate::font::Font", value = "font" },
+  { name = "message", ty = "&Message", value = "&message" },
+  { name = "focused", ty = "bool", value = "focused" },
+]
+
+# ...and this many wrapped lines to scroll back through.
+[[injection]]
+id = "lines"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client_render::chat::Chat::add_lines"
+helper = "lines.rs"
+bindings = [
+  { name = "chat", ty = "&mut Chat", value = "&mut *self" },
+  { name = "font", ty = "&crate::font::Font", value = "font" },
+  { name = "message", ty = "&Message", value = "message" },
+  { name = "focused", ty = "bool", value = "focused" },
+]
